@@ -3,9 +3,12 @@ import numpy as np
 import copy
 from sys import argv
 
+originFileName = ""
+tamperFileName = ""  
 drawing = False # true if mouse is pressed
 ix,iy = 0,0
 cx,cy = 0,0
+r = 3
 boxList = []
 seqBox = {} #marked box
 outBox = {} #predicted box
@@ -59,10 +62,30 @@ def draw_box(event,x,y,flags,param):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
         cv2.imshow('origin', res)
 
+def read_box_to_seq(fileName):
+    f1 = open(fileName, 'r')
+    f1.readline()
+    f1.readline()
+    f1.readline()
+    linestr = f1.readline().strip('\n').strip('\r')
+    while (linestr):
+        d = linestr.split(', ')
+        frameID = int(d[0])
+        seqBox[frameID] = []
+        for i in range(1, len(d)-1, 4):
+            #print d[i], i
+            x1, y1 = d[i], d[i+1]
+            x2, y2 = d[i+2], d[i+3]
+            boxDict = dict(x1=int(x1)/r, y1=int(y1)/r, x2=int(x2)/r, y2=int(y2)/r)
+            seqBox[frameID].append(boxDict)
+            
+        linestr = f1.readline().strip('\n').strip('\r')
 
 def write_box_to_file(fileName):
     #print fileName
     f1 = open(fileName, 'w')
+    f1.write("%s\n" % originFileName)
+    f1.write("%s\n" % tamperFileName)
     f1.write("%s\n" % "frame, x1, y1, x2, y2")
     for boxidx in seqBox:
         f1.write("%03d, " % boxidx)
@@ -74,6 +97,8 @@ def write_box_to_file(fileName):
 def write_results_to_file(fileName):
     #print fileName
     f1 = open(fileName, 'w')
+    f1.write("%s\n" % originFileName)
+    f1.write("%s\n" % tamperFileName)
     f1.write("%s\n" % "frame, x1, y1, x2, y2")
     for boxidx in outBox:
         f1.write("%03d, " % boxidx)
@@ -140,8 +165,7 @@ if __name__ == '__main__':
     print "frame, x1, y1, x2, y2"
 
     cnt = 0
-    w, h = size[0], size[1]
-    r = 3
+    w, h = size[0], size[1]    
     cv2.namedWindow('origin', cv2.WINDOW_AUTOSIZE)
     cv2.namedWindow('tamper', cv2.WINDOW_AUTOSIZE)
     cv2.namedWindow('tamper-delta', cv2.WINDOW_AUTOSIZE)
@@ -165,6 +189,10 @@ if __name__ == '__main__':
         ret2, framet = tamper.read()
 
     cv2.setMouseCallback('origin', draw_box)
+
+    #read previous marked box
+    if len(argv)>3:
+        read_box_to_seq(argv[3])
 
     #process frame by frame
     while(ret1 and ret2):
