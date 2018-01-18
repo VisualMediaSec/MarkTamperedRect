@@ -6,6 +6,7 @@ from sys import argv
 originFileName = ""
 tamperFileName = ""  
 drawing = False # true if mouse is pressed
+font = cv2.FONT_HERSHEY_SIMPLEX
 ix,iy = 0,0
 cx,cy = 0,0
 r = 3
@@ -26,15 +27,17 @@ def draw_box(event,x,y,flags,param):
         ix,iy = x,y
         #draw box in boxList
         res = np.copy(resempty)
-        for cbox in boxList:
+        for index,cbox in enumerate(boxList):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
+                cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)
         cv2.imshow('origin', res)
     elif event == cv2.EVENT_MOUSEMOVE:
         if drawing == True:
             #draw box in boxList
             res = np.copy(resempty)
-            for cbox in boxList:
+            for index,cbox in enumerate(boxList):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
+                cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)
             cv2.rectangle(res,(ix,iy),(x,y),(0,255,0),2,0)
             cv2.imshow('origin', res)
     elif event == cv2.EVENT_LBUTTONUP:
@@ -47,8 +50,9 @@ def draw_box(event,x,y,flags,param):
             ix=iy=0
         #draw box in boxList
         res = np.copy(resempty)
-        for cbox in boxList:
-                cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)        
+        for index,cbox in enumerate(boxList):
+                cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
+                cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)        
         cv2.imshow('origin', res)
     elif event == cv2.EVENT_RBUTTONUP:
         #delete selected box in boxList
@@ -58,8 +62,9 @@ def draw_box(event,x,y,flags,param):
                 break
         #draw box in boxList
         res = np.copy(resempty)
-        for cbox in boxList:
+        for index,cbox in enumerate(boxList):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
+                cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)
         cv2.imshow('origin', res)
 
 def read_box_to_seq(fileName):
@@ -201,17 +206,17 @@ if __name__ == '__main__':
 
         res=cv2.resize(frame, (w/r,h/r), interpolation=cv2.INTER_CUBIC)
         rest=cv2.resize(framet, (w/r,h/r), interpolation=cv2.INTER_CUBIC)
-
-        font = cv2.FONT_HERSHEY_SIMPLEX
+        
         cv2.putText(rest, str(cnt), (10,50), font, 1, (0,0,255), 2)
         
         resempty = np.copy(res) #for backup
 
         #show box in boxList
-        for cbox in boxList:
+        for index,cbox in enumerate(boxList):
             p1 = (cbox["x1"], cbox["y1"])
             p2 = (cbox["x2"], cbox["y2"])
             cv2.rectangle(res, p1, p2, (0,0,255),2,0)
+            cv2.putText(res, str(index), p1, font, 0.5, (0,255,0), 2)
 
         cv2.imshow('origin', res)
         cv2.imshow('tamper', rest)
