@@ -30,7 +30,7 @@ def draw_box(event,x,y,flags,param):
         for index,cbox in enumerate(boxList):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
                 cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)
-        cv2.imshow('origin', res)
+        cv2.imshow('original', res)
     elif event == cv2.EVENT_MOUSEMOVE:
         if drawing == True:
             #draw box in boxList
@@ -39,7 +39,7 @@ def draw_box(event,x,y,flags,param):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
                 cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)
             cv2.rectangle(res,(ix,iy),(x,y),(0,255,0),2,0)
-            cv2.imshow('origin', res)
+            cv2.imshow('original', res)
     elif event == cv2.EVENT_LBUTTONUP:
         drawing = False
         if (abs(ix-x)>10 and abs(iy-y)>10):
@@ -53,7 +53,7 @@ def draw_box(event,x,y,flags,param):
         for index,cbox in enumerate(boxList):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
                 cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)        
-        cv2.imshow('origin', res)
+        cv2.imshow('original', res)
     elif event == cv2.EVENT_RBUTTONUP:
         #delete selected box in boxList
         for cbox in boxList:
@@ -65,7 +65,7 @@ def draw_box(event,x,y,flags,param):
         for index,cbox in enumerate(boxList):
                 cv2.rectangle(res, (cbox["x1"], cbox["y1"]), (cbox["x2"], cbox["y2"]), (0,255,0),2,0)
                 cv2.putText(res, str(index), (cbox["x1"], cbox["y1"]), font, 0.5, (0,0,255), 2)
-        cv2.imshow('origin', res)
+        cv2.imshow('original', res)
 
 def read_box_to_seq(fileName):
     f1 = open(fileName, 'r')
@@ -119,7 +119,7 @@ def predict_box_in_all_frames():
     markedFrames = seqBox.keys()
     markedFrames.sort()
     for i in range(markedFrames[0], markedFrames[-1]+1):
-        outBox[i] = []        
+        outBox[i] = []
     startIdx = markedFrames[0]
     startBoxLst = seqBox[startIdx]
     boxNumber = len(startBoxLst)
@@ -171,12 +171,12 @@ if __name__ == '__main__':
 
     cnt = 0
     w, h = size[0], size[1]    
-    cv2.namedWindow('origin', cv2.WINDOW_AUTOSIZE)
-    cv2.namedWindow('tamper', cv2.WINDOW_AUTOSIZE)
-    cv2.namedWindow('tamper-delta', cv2.WINDOW_AUTOSIZE)
-    cv2.moveWindow('origin', 40, 40)
-    cv2.moveWindow('tamper', w/r+80, 40)
-    cv2.moveWindow('tamper-delta', 80, h/r+80)
+    cv2.namedWindow('original', cv2.WINDOW_AUTOSIZE)
+    cv2.namedWindow('tampered', cv2.WINDOW_AUTOSIZE)
+    cv2.namedWindow('difference', cv2.WINDOW_AUTOSIZE)
+    cv2.moveWindow('original', 40, 40)
+    cv2.moveWindow('tampered', w/r+80, 40)
+    cv2.moveWindow('difference', 80, h/r+80)
 
 
     #skip bad frames at the begining
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         ret1, frame = origin.read()
         ret2, framet = tamper.read()
 
-    cv2.setMouseCallback('origin', draw_box)
+    cv2.setMouseCallback('original', draw_box)
 
     #read previous marked box
     if len(argv)>3:
@@ -218,13 +218,14 @@ if __name__ == '__main__':
             cv2.rectangle(res, p1, p2, (0,0,255),2,0)
             cv2.putText(res, str(index), p1, font, 0.5, (0,255,0), 2)
 
-        cv2.imshow('origin', res)
-        cv2.imshow('tamper', rest)
+        cv2.imshow('original', res)
+        cv2.imshow('tampered', rest)
         
-        resd = abs(framet-framepre)
+        #resd = abs(framet-framepre)
+        resd = cv2.absdiff(framet, frame)
         #resd = cv2.cvtColor(resd, cv2.COLOR_BGR2GRAY)
         resd = cv2.resize(resd, (w/r,h/r), interpolation=cv2.INTER_CUBIC)
-        cv2.imshow('tamper-delta', resd)
+        cv2.imshow('difference', resd)
 
         inputkey = cv2.waitKey(0)
         if inputkey & 0xFF == 27:
@@ -242,10 +243,13 @@ if __name__ == '__main__':
                 print "%d, %d, %d, %d, " % (cbox["x1"]*r, cbox["y1"]*r, cbox["x2"]*r, cbox["y2"]*r),
             print " "
         elif inputkey  & 0xFF == ord('r'):
-            cnt = cnt - 2
+            cnt = cnt - 1
             origin.set(cv2.CAP_PROP_POS_FRAMES, cnt)
-            tamper.set(cv2.CAP_PROP_POS_FRAMES, cnt)
+            tamper.set(cv2.CAP_PROP_POS_FRAMES, cnt)            
+            ret1, frame = origin.read()
+            ret2, framet = tamper.read()
             #boxList = []
+            continue
 
         cnt += 1
         if cnt in seqBox:
@@ -260,7 +264,7 @@ if __name__ == '__main__':
     cv2.destroyAllWindows()
 
     #write box in all video sequence to file
-    write_box_to_file(originFileName.split('.')[0]+".txt")
+    write_box_to_file(originFileName.split('.')[0]+"_marked.txt")
 
     #predict box in all frames
     predict_box_in_all_frames()
