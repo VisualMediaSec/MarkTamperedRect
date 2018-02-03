@@ -221,8 +221,8 @@ if __name__ == '__main__':
         cv2.imshow('original', res)
         cv2.imshow('tampered', rest)
         
-        #resd = abs(framet-framepre)
-        resd = cv2.absdiff(framet, frame)
+        resd = abs(framet-framepre)
+        #resd = cv2.absdiff(framet, frame)
         #resd = cv2.cvtColor(resd, cv2.COLOR_BGR2GRAY)
         resd = cv2.resize(resd, (w/r,h/r), interpolation=cv2.INTER_CUBIC)
         cv2.imshow('difference', resd)
