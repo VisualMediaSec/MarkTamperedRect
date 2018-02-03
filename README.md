@@ -6,12 +6,12 @@ The annotation of video tampering dataset is a boring task that takes a lot of m
 
 python markbox.py originalvideofile.mp4 tamperedvideofile.mp4
 
-short keys:
-s: save bounding box
-r: last video frame
-space: next video frame
-mouse right key: delete the selected bounding box
-mouse left key: draw a new bounding box
-ESC: quit
+short keys:  
+s: save bounding box  
+r: last video frame  
+space: next video frame  
+mouse right key: delete the selected bounding box  
+mouse left key: draw a new bounding box  
+ESC: quit  
 
 please see the file on arxiv for more details.
